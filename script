@@ -1,0 +1,58 @@
+Centos 7
+
+
+echo "Installing util tools"
+
+yum -y install yum-utils
+yum -y install net-tools
+yum -y install m2crypto python-setuptools
+yum-builddep -y python
+
+echo "Instanling python"
+
+curl -O https://www.python.org/ftp/python/3.6.10/Python-3.6.10.tgz
+tar xf Python-3.6.10.tgz
+cd Python-3.6.10
+./configure
+make
+make install
+# echo "alias python='/usr/local/bin/python3.6'" > /etc/profile.d/python.sh
+# echo "alias pip='/usr/local/bin/pip3.6'" > /etc/profile.d/pip.sh
+# source /etc/profile.d/python.sh
+# source /etc/profile.d/pip.sh
+
+echo "Installing shadowsocks and firewall"
+
+pip3.6 install shadowsocks
+yum install -y libevent
+pip3.6 install greenlet
+pip3.6 install gevent
+
+yum install firewalld
+systemctl start firewalld
+
+echo "Configuring shadowsocks"
+
+ip=`ifconfig eth0 | sed -n "/inet /p" | sed 's/^.*inet //g' | sed 's/  netmask.*$//g'`
+
+rm -f /etc/shadowsocks.json
+cat << EOF >> /etc/shadowsocks.json
+{
+    "server": "IP",
+    "server_port": 8888,
+    "password": "xuxin123",
+    "local_address": "127.0.0.1",
+    "local_port":1080,
+    "timeout":300,
+    "method":"aes-256-cfb",
+    "fast_open": false
+}
+EOF
+sed -i 's/IP/'"$ip"'/' /etc/shadowsocks.json
+
+firewall-cmd --zone=public --add-port=8888/tcp --permanent
+firewall-cmd --reload
+
+echo "Starting server"
+nohup ssserver -c /etc/shadowsocks.json > /dev/null 2>&1 &
+
