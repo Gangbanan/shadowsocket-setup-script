@@ -50,9 +50,5 @@ cat << EOF >> /etc/shadowsocks.json
 EOF
 sed -i 's/IP/'"$ip"'/' /etc/shadowsocks.json
 
-firewall-cmd --zone=public --add-port=8888/tcp --permanent
-firewall-cmd --reload
-
-echo "Starting server"
-nohup ssserver -c /etc/shadowsocks.json > /dev/null 2>&1 &
+firewall-cmd --zone=public --add-port=8888/tcp --permanent &&firewall-cmd --reload && nohup ssserver -c /etc/shadowsocks.json > /dev/null 2>&1 &
 
